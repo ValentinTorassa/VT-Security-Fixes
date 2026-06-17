@@ -44,3 +44,11 @@ Each patch is a DEP-3 formatted quilt patch ready to be dropped into `debian/pat
    ```
    git clone https://git.launchpad.net/ubuntu-cve-tracker
    ```
+
+### CVE-2025-11266 — gdcm (jammy + noble + questing)
+
+- **Severity**: MEDIUM (6.6 CVSS)
+- **Issue**: Out-of-bounds write in DICOM encapsulated PixelData fragment parsing due to unsigned integer underflow
+- **Upstream fix**: https://github.com/malaterre/GDCM/commit/5829c95c8ac3afa9a3a3413675e948959c28a789
+- **Debian bug**: https://bugs.debian.org/1122862
+- **Fixed in**: resolute/devel (3.0.24-9ubuntu1)
