@@ -1,8 +1,43 @@
-# Ubuntu Security Fixes
+```
+ ██╗   ██╗████████╗   ███████╗███████╗ ██████╗
+ ██║   ██║╚══██╔══╝   ██╔════╝██╔════╝██╔════╝
+ ██║   ██║   ██║      ███████╗█████╗  ██║
+ ╚██╗ ██╔╝   ██║      ╚════██║██╔══╝  ██║
+  ╚████╔╝    ██║      ███████║███████╗╚██████╗
+   ╚═══╝     ╚═╝      ╚══════╝╚══════╝ ╚═════╝
+     Security Fixes · patches for packages the autoupdater forgot
+```
 
-Patches for open CVEs in Ubuntu **universe** packages — community-maintained packages that don't receive automatic security updates from Canonical.
+# VT Security Fixes
 
-All three CVEs below already have fixes published in the **ESM (Ubuntu Pro)** pocket. The patches here bridge the gap to the standard pocket (what most users run).
+> Some packages don't get the security update. — VT Security
+
+A personal, growing collection of **security patches for open-source packages that
+fall through the cracks of automatic updates** — the long tail of community-maintained
+software where a CVE is public, an upstream fix exists, but nothing has landed in the
+channel most people actually run.
+
+Each fix here is **DEP-3 formatted** and ready to drop into `debian/patches/`, with the
+provenance (upstream commit, CVE, bug links) baked into the patch header. Today the
+focus is **Ubuntu `universe`** CVEs, but the layout is distro-agnostic — anything with a
+public CVE and an upstream fix is fair game.
+
+| | |
+|---|---|
+| **Scope** | Open-source security patches (currently Ubuntu universe) |
+| **Format** | DEP-3 patches, ready for `debian/patches/` |
+| **Status** | Tracked in [`fixes.yaml`](fixes.yaml) |
+| **Contributing** | See [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+
+---
+
+## Why this exists
+
+Canonical ships automatic security updates for **main**, but **universe** packages are
+community-maintained — they only get fixes if someone does the SRU (Stable Release
+Update) work. For the CVEs below, fixes already exist in the **ESM (Ubuntu Pro)** pocket,
+but the standard pocket — what most users run — is still vulnerable. These patches bridge
+that gap, and are formatted so a maintainer can pick them up with zero rework.
 
 ---
 
@@ -69,18 +104,21 @@ All three CVEs below already have fixes published in the **ESM (Ubuntu Pro)** po
 ## How to submit an SRU
 
 1. **File a Launchpad bug** for each CVE at `bugs.launchpad.net/ubuntu/+source/<pkg>`
+   (a ready-to-paste `bug-report.md` lives in each package folder)
 2. **Download source**: `pull-lp-source <pkg> jammy`
 3. **Apply patch**: copy `.patch` into `debian/patches/`, add to `series`
 4. **Changelog**: `dch -v "<version>.1" -D jammy-security "SECURITY UPDATE: ..."`
 5. **Build & upload**: `debuild -S -sa && dput ubuntu ../*.changes`
 
-> The patches are DEP-3 formatted — they include Origin, Bug links, and upstream commit references. Ready for `debian/patches/`.
+> The patches are DEP-3 formatted — they include Origin, Bug links, and upstream commit
+> references. Ready for `debian/patches/`.
 
 ---
 
 ## How to check if a fix was merged
 
-The merge doesn't happen on GitHub — it happens on **Launchpad** (Ubuntu's platform). Here's how to track each step:
+The merge doesn't happen on GitHub — it happens on **Launchpad** (Ubuntu's platform).
+Here's how to track each step:
 
 | What to check | How | Meaning |
 |---|---|---|
@@ -102,12 +140,34 @@ grep jammy_libsoup3 ubuntu-cve-tracker/active/CVE-2025-11021
 
 ---
 
-## Repository structure
+## Repository layout
 
 ```
-libsoup3/            → CVE-2025-11021 / CVE-2025-4945
-libyaml-syck-perl/   → CVE-2025-11683
-gdcm/                → CVE-2025-11266
+fixes.yaml             → machine-readable index of every fix + its status
+CONTRIBUTING.md        → how to add a new fix
+_template/             → scaffolding for a new package fix
+tools/
+  new-fix.sh           → bootstrap a new package folder from the template
+  verify-patches.sh    → sanity-check every patch in the repo
+libsoup3/              → CVE-2025-11021 / CVE-2025-4945
+libyaml-syck-perl/     → CVE-2025-11683
+gdcm/                  → CVE-2025-11266
 ```
 
-Each folder contains the `.patch` file and packaging diffs (`changelog.diff`, `series.diff`).
+Each package folder contains the `.patch` file, a ready-to-file `bug-report.md`, and any
+packaging diffs (`changelog.diff`, `*.debdiff`).
+
+### Add a fix
+
+```bash
+./tools/new-fix.sh <package> <CVE-id>   # scaffold from _template/
+./tools/verify-patches.sh               # check everything still applies cleanly
+```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
+
+---
+
+<sub>Maintained by <b>Valentín Torassa</b> · part of the <b>VT Security</b> toolset ·
+companion to <a href="https://github.com/ValentinTorassa/PhantomLog">PhantomLog</a> and
+<a href="https://github.com/ValentinTorassa/VT-SecretShare">VT-SecretShare</a></sub>
