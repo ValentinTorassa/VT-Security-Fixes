@@ -149,6 +149,7 @@ _template/             → scaffolding for a new package fix
 tools/
   new-fix.sh           → bootstrap a new package folder from the template
   verify-patches.sh    → sanity-check every patch in the repo
+  submit-sru.sh        → build source-only SRU uploads for every fix (Ubuntu only)
 libsoup3/              → CVE-2025-11021 / CVE-2025-4945
 libyaml-syck-perl/     → CVE-2025-11683
 gdcm/                  → CVE-2025-11266
@@ -163,6 +164,21 @@ packaging diffs (`changelog.diff`, `*.debdiff`).
 ./tools/new-fix.sh <package> <CVE-id>   # scaffold from _template/
 ./tools/verify-patches.sh               # check everything still applies cleanly
 ```
+
+### Build the SRU uploads
+
+On an **Ubuntu** box/schroot for the target series (won't run on Debian), one
+script builds source-only uploads for every fix — `pull-lp-source`, apply patch,
+`quilt push -a`, `dch`, `debuild -S`:
+
+```bash
+./tools/submit-sru.sh            # build all, unsigned source packages
+./tools/submit-sru.sh --sign     # sign with your Launchpad GPG key
+./tools/submit-sru.sh --upload   # sign + dput ubuntu  (irreversible — yours to run)
+```
+
+The signing/`dput` (and filing the Launchpad bug per package) are intentionally
+left to you: they're outward-facing and tied to your Launchpad identity.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
 
