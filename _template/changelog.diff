@@ -1,0 +1,11 @@
+# One stanza per affected release. Confirm <base-version> with `rmadison <package>`.
+# The maintainer line MUST match the GPG key registered on your Launchpad profile.
+
+<package> (<base-version>+esmN-or-ubuntu0.1) <series>-security; urgency=medium
+
+  * SECURITY UPDATE: <one-line summary>
+    - debian/patches/CVE-XXXX-NNNNN.patch: <what the patch does, in
+      which file/function>.
+    - CVE-XXXX-NNNNN
+
+ -- Valentín Torassa Colombero  <your-launchpad-email>  <RFC2822 date>

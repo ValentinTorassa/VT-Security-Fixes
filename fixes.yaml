@@ -1,0 +1,41 @@
+# Machine-readable registry of fixes in this repo.
+# Keep in sync with the status table in README.md (tools/verify-patches.sh checks the patches).
+fixes:
+  - cve: CVE-2025-11021        # + CVE-2025-4945 (same patch)
+    package: libsoup3
+    component: universe
+    severity: high             # CVSS 7.5
+    summary: OOB read in cookie date parsing (integer overflow in parse_timezone)
+    affected: [jammy]
+    esm: { jammy: "released (3.0.7-0ubuntu1+esm5)" }
+    standard: { jammy: needed }
+    upstream: https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/473
+    applied_upstream: "3.4.0"
+    debian_bug: 1116469
+    patch: libsoup3/CVE-2025-11021-CVE-2025-4945.patch
+
+  - cve: CVE-2025-11683
+    package: libyaml-syck-perl
+    component: universe
+    severity: medium           # CVSS 6.5
+    summary: Missing null terminators in token.c (OOB read on empty-key YAML hashes)
+    affected: [jammy, noble]
+    esm:
+      jammy: "released (1.34-1ubuntu0.1~esm1)"
+      noble: "released (1.34-2ubuntu0.24.04.1~esm1)"
+    standard: { jammy: needed, noble: needed }
+    upstream: https://github.com/cpan-authors/YAML-Syck/commit/dcf4c8477b82ef439f43fd20dc099082d096df02
+    applied_upstream: "1.36"
+    patch: libyaml-syck-perl/CVE-2025-11683.patch
+
+  - cve: CVE-2025-11266
+    package: gdcm
+    component: universe
+    severity: medium           # CVSS 6.6
+    summary: OOB write in DICOM encapsulated PixelData fragment parsing
+    affected: [jammy, noble, questing]
+    standard: { jammy: needed, noble: needed, questing: needed }
+    upstream: https://github.com/malaterre/GDCM/commit/5829c95c8ac3afa9a3a3413675e948959c28a789
+    applied_upstream: "3.2.2"
+    debian_bug: 1122862
+    patch: gdcm/CVE-2025-11266.patch
