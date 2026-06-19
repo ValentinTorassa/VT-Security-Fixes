@@ -7,7 +7,7 @@ diff -Nru libsoup3-3.0.7.orig/debian/patches/CVE-2025-11021-CVE-2025-4945.patch 
 + cookie expiration dates, preventing out-of-bounds memory reads caused
 + by integer overflow in parse_timezone() and other date parsing functions.
 +Origin: upstream, https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/473
-+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/libsoup3/+bug/TODO
++Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/libsoup3/+bug/2157576
 +Bug-Debian: https://bugs.debian.org/1116469
 +Applied-Upstream: 3.4.0
 +Reviewed-by: Ubuntu Security Team
