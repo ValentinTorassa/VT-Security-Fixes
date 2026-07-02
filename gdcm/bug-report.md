@@ -1,5 +1,5 @@
 <!-- Launchpad bug: https://bugs.launchpad.net/ubuntu/+source/gdcm/+filebug
-     Title: [SRU] gdcm: CVE-2025-11266 OOB write in DICOM fragment parsing -->
+     Title: gdcm: CVE-2025-11266 OOB write in DICOM fragment parsing -->
 
 **[Impact]**
 
