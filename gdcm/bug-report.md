@@ -1,4 +1,4 @@
-<!-- Launchpad bug: https://bugs.launchpad.net/ubuntu/+source/gdcm/+filebug
+<!-- Launchpad bug: https://bugs.launchpad.net/ubuntu/+source/gdcm/+bug/2157578
      Title: gdcm: CVE-2025-11266 OOB write in DICOM fragment parsing -->
 
 **[Impact]**
