@@ -2,6 +2,8 @@
 # Keep in sync with the status table in README.md (tools/verify-patches.sh checks the patches).
 fixes:
   - cve: CVE-2025-11021        # + CVE-2025-4945 (same patch)
+    reviewed_at: "2026-09-14"
+    status_source: https://ubuntu.com/security/CVE-2025-11021
     package: libsoup3
     component: universe
     severity: high             # CVSS 7.5
@@ -16,6 +18,8 @@ fixes:
     patch: libsoup3/CVE-2025-11021-CVE-2025-4945.patch
 
   - cve: CVE-2025-11683
+    reviewed_at: "2026-09-14"
+    status_source: https://ubuntu.com/security/CVE-2025-11683
     package: libyaml-syck-perl
     component: universe
     severity: medium           # CVSS 6.5
@@ -31,12 +35,14 @@ fixes:
     patch: libyaml-syck-perl/CVE-2025-11683.patch
 
   - cve: CVE-2025-11266
+    reviewed_at: "2026-09-14"
+    status_source: https://ubuntu.com/security/CVE-2025-11266
     package: gdcm
     component: universe
     severity: medium           # CVSS 6.6
     summary: OOB write in DICOM encapsulated PixelData fragment parsing
     affected: [jammy, noble, questing]
-    standard: { jammy: needed, noble: needed, questing: needed }
+    standard: { jammy: needed, noble: needed, questing: "ignored (end of life; was needed)" }
     upstream: https://github.com/malaterre/GDCM/commit/5829c95c8ac3afa9a3a3413675e948959c28a789
     applied_upstream: "3.2.2"
     debian_bug: 1122862

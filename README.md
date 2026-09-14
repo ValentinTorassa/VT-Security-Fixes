@@ -187,3 +187,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
 <sub>Maintained by <b>Valentín Torassa</b> · part of the <b>VT Security</b> toolset ·
 companion to <a href="https://github.com/ValentinTorassa/PhantomLog">PhantomLog</a> and
 <a href="https://github.com/ValentinTorassa/VT-SecretShare">VT-SecretShare</a></sub>
+
+## Status review — 2026-09-14
+
+The Ubuntu trackers still list the Jammy libsoup3 fix and Jammy/Noble YAML::Syck fixes through ESM; no standard release is evidenced there. [libsoup3 tracker](https://ubuntu.com/security/CVE-2025-11021), [YAML::Syck tracker](https://ubuntu.com/security/CVE-2025-11683).
+
+[GDCM](https://ubuntu.com/security/CVE-2025-11266) remains vulnerable on Jammy/Noble; Questing is now ignored because it reached end of life. `fixes.yaml` records that distinction. This is a tracker review, not a claim that the submitted sponsorship bugs were accepted.
+
+The saved GDCM stash was compared with HEAD: the current tree already contains the `-1ubuntu1` Jammy debdiff and newer patch headers. It was preserved instead of applying an older patch set over the current files. Follow up on the existing Launchpad bugs during the weekly maintenance block.
