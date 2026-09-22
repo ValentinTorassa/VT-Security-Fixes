@@ -10,16 +10,16 @@
 
 # VT Security Fixes
 
-> Some packages don't get the security update. — VT Security
+> Some packages don't get the security update. - VT Security
 
 A personal, growing collection of **security patches for open-source packages that
-fall through the cracks of automatic updates** — the long tail of community-maintained
+fall through the cracks of automatic updates** - the long tail of community-maintained
 software where a CVE is public, an upstream fix exists, but nothing has landed in the
 channel most people actually run.
 
 Each fix here is **DEP-3 formatted** and ready to drop into `debian/patches/`, with the
 provenance (upstream commit, CVE, bug links) baked into the patch header. Today the
-focus is **Ubuntu `universe`** CVEs, but the layout is distro-agnostic — anything with a
+focus is **Ubuntu `universe`** CVEs, but the layout is distro-agnostic - anything with a
 public CVE and an upstream fix is fair game.
 
 | | |
@@ -34,19 +34,19 @@ public CVE and an upstream fix is fair game.
 ## Why this exists
 
 Canonical ships automatic security updates for **main**, but **universe** packages are
-community-maintained — they only get fixes if someone does the SRU (Stable Release
+community-maintained - they only get fixes if someone does the SRU (Stable Release
 Update) work. For the CVEs below, fixes already exist in the **ESM (Ubuntu Pro)** pocket,
-but the standard pocket — what most users run — is still vulnerable. These patches bridge
+but the standard pocket - what most users run - is still vulnerable. These patches bridge
 that gap, and are formatted so a maintainer can pick them up with zero rework.
 
 ---
 
-## 🟡 CVE-2025-11021 — libsoup3 (jammy)
+## 🟡 CVE-2025-11021 - libsoup3 (jammy)
 
 | | |
 |---|---|
 | **Severity** | HIGH (CVSS 7.5) |
-| **Issue** | Out-of-bounds read in cookie date parsing — integer overflow in `parse_timezone()` |
+| **Issue** | Out-of-bounds read in cookie date parsing - integer overflow in `parse_timezone()` |
 | **Package** | `libsoup3` |
 | **Affected** | `jammy` only (all other releases already patched) |
 | **ESM status** | ✅ `esm-apps/jammy: released (3.0.7-0ubuntu1+esm5)` |
@@ -62,12 +62,12 @@ that gap, and are formatted so a maintainer can pick them up with zero rework.
 
 ---
 
-## 🟡 CVE-2025-11683 — libyaml-syck-perl (jammy + noble)
+## 🟡 CVE-2025-11683 - libyaml-syck-perl (jammy + noble)
 
 | | |
 |---|---|
 | **Severity** | MEDIUM (CVSS 6.5) |
-| **Issue** | Missing null terminators in `token.c` — out-of-bounds read on empty-key YAML hashes |
+| **Issue** | Missing null terminators in `token.c` - out-of-bounds read on empty-key YAML hashes |
 | **Package** | `libyaml-syck-perl` |
 | **Affected** | `jammy`, `noble` |
 | **ESM status** | ✅ `esm-apps/jammy: released (1.34-1ubuntu0.1~esm1)`, `esm-apps/noble: released (1.34-2ubuntu0.24.04.1~esm1)` |
@@ -82,12 +82,12 @@ that gap, and are formatted so a maintainer can pick them up with zero rework.
 
 ---
 
-## 🟡 CVE-2025-11266 — gdcm (jammy + noble + questing)
+## 🟡 CVE-2025-11266 - gdcm (jammy + noble + questing)
 
 | | |
 |---|---|
 | **Severity** | MEDIUM (CVSS 6.6) |
-| **Issue** | OOB write in DICOM fragment parsing — missing bounds check before buffer access |
+| **Issue** | OOB write in DICOM fragment parsing - missing bounds check before buffer access |
 | **Package** | `gdcm` |
 | **Affected** | `jammy`, `noble`, `questing` |
 | **Upstream fix** | [5829c95](https://github.com/malaterre/GDCM/commit/5829c95c8ac3afa9a3a3413675e948959c28a789) (v3.2.2) |
@@ -110,19 +110,19 @@ that gap, and are formatted so a maintainer can pick them up with zero rework.
 4. **Changelog**: `dch -v "<version>.1" -D jammy-security "SECURITY UPDATE: ..."`
 5. **Build & upload**: `debuild -S -sa && dput ubuntu ../*.changes`
 
-> The patches are DEP-3 formatted — they include Origin, Bug links, and upstream commit
+> The patches are DEP-3 formatted - they include Origin, Bug links, and upstream commit
 > references. Ready for `debian/patches/`.
 
 ---
 
 ## How to check if a fix was merged
 
-The merge doesn't happen on GitHub — it happens on **Launchpad** (Ubuntu's platform).
+The merge doesn't happen on GitHub - it happens on **Launchpad** (Ubuntu's platform).
 Here's how to track each step:
 
 | What to check | How | Meaning |
 |---|---|---|
-| **CVE tracker status** | [ubuntu.com/security/cves](https://ubuntu.com/security/cves) — search the CVE ID | If it says "Fixed" or shows a released version, the patch shipped |
+| **CVE tracker status** | [ubuntu.com/security/cves](https://ubuntu.com/security/cves) - search the CVE ID | If it says "Fixed" or shows a released version, the patch shipped |
 | **Package version** | `rmadison <pkg>` on any Ubuntu machine | Look for `-security` or `-updates` pocket with the patched version |
 | **Launchpad bug** | The bug you filed when submitting | Status goes: New → In Progress → Fix Committed → Fix Released |
 | **UCT git repo** | `git clone lp:ubuntu-cve-tracker && grep <pkg> active/CVE-*` | `needed` changes to `released (<version>)` |
@@ -168,13 +168,13 @@ packaging diffs (`changelog.diff`, `*.debdiff`).
 ### Build the SRU uploads
 
 On an **Ubuntu** box/schroot for the target series (won't run on Debian), one
-script builds source-only uploads for every fix — `pull-lp-source`, apply patch,
+script builds source-only uploads for every fix - `pull-lp-source`, apply patch,
 `quilt push -a`, `dch`, `debuild -S`:
 
 ```bash
 ./tools/submit-sru.sh            # build all, unsigned source packages
 ./tools/submit-sru.sh --sign     # sign with your Launchpad GPG key
-./tools/submit-sru.sh --upload   # sign + dput ubuntu  (irreversible — yours to run)
+./tools/submit-sru.sh --upload   # sign + dput ubuntu  (irreversible - yours to run)
 ```
 
 The signing/`dput` (and filing the Launchpad bug per package) are intentionally
@@ -188,7 +188,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
 companion to <a href="https://github.com/ValentinTorassa/PhantomLog">PhantomLog</a> and
 <a href="https://github.com/ValentinTorassa/VT-SecretShare">VT-SecretShare</a></sub>
 
-## Status review — 2026-09-14
+## Status review - 2026-09-14
 
 The Ubuntu trackers still list the Jammy libsoup3 fix and Jammy/Noble YAML::Syck fixes through ESM; no standard release is evidenced there. [libsoup3 tracker](https://ubuntu.com/security/CVE-2025-11021), [YAML::Syck tracker](https://ubuntu.com/security/CVE-2025-11683).
 

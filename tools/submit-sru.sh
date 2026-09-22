@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build source-only SRU uploads for every fix in this repo.
 #
-# Run this ON AN UBUNTU MACHINE (or schroot) for the target series — it cannot
+# Run this ON AN UBUNTU MACHINE (or schroot) for the target series - it cannot
 # work on Debian or any non-Ubuntu host, because pull-lp-source fetches from
 # Launchpad and the build must match the Ubuntu series.
 #
@@ -49,7 +49,7 @@ note() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
 
 # --- preflight -------------------------------------------------------------
 command -v lsb_release >/dev/null && [[ "$(lsb_release -is)" == Ubuntu ]] \
-    || die "this host is not Ubuntu — run it in an Ubuntu schroot/VM for the target series"
+    || die "this host is not Ubuntu - run it in an Ubuntu schroot/VM for the target series"
 
 missing=()
 for t in pull-lp-source dch debuild quilt dpkg-parsechangelog; do
@@ -60,7 +60,7 @@ if ((${#missing[@]})); then
   install with: sudo apt install devscripts ubuntu-dev-tools quilt"
 fi
 if ((sign)) && ! gpg --list-secret-keys >/dev/null 2>&1; then
-    die "no GPG secret key found — needed to sign. Register one on your Launchpad profile first."
+    die "no GPG secret key found - needed to sign. Register one on your Launchpad profile first."
 fi
 
 # Compute the Ubuntu security version: append .1, or bump a trailing .N.
@@ -102,7 +102,7 @@ for entry in "${fixes[@]}"; do
             || echo "$patch_file" >> "$src/debian/patches/series"
 
         ( cd "$src" && QUILT_PATCHES=debian/patches quilt push -a ) \
-            || die "patch does not apply cleanly for $pkg/$s — fix the patch, do not force"
+            || die "patch does not apply cleanly for $pkg/$s - fix the patch, do not force"
         ( cd "$src" && QUILT_PATCHES=debian/patches quilt pop -a >/dev/null )
 
         # Changelog: one SECURITY UPDATE line + the CVE list.

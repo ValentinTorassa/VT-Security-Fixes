@@ -27,7 +27,7 @@ DEP-3 patch is attached / in this repo at `<package>/CVE-XXXX-NNNNN.patch`.
 **[Where problems could occur]**
 
 The change is limited to <area>. Regression risk is <low/medium> because <reason
-— e.g. it only adds bounds checks before existing reads>.
+- e.g. it only adds bounds checks before existing reads>.
 
 **[Other info]**
 

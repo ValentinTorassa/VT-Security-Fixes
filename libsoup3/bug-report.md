@@ -12,7 +12,7 @@ via a crafted `Set-Cookie` date. Fixed in ESM (`esm-apps/jammy: released
 
 **[Affected releases]**
 
-- jammy: `needed` (base 3.0.7-0ubuntu1) — all later releases already patched.
+- jammy: `needed` (base 3.0.7-0ubuntu1) - all later releases already patched.
 
 **[Fix]**
 
