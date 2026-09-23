@@ -1,0 +1,15 @@
+name: Verify patches
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - run: for f in tools/*.sh; do bash -n "$f"; done
+      - run: bash tools/verify-patches.sh
