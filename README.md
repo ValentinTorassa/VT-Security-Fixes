@@ -195,3 +195,15 @@ The Ubuntu trackers still list the Jammy libsoup3 fix and Jammy/Noble YAML::Syck
 [GDCM](https://ubuntu.com/security/CVE-2025-11266) remains vulnerable on Jammy/Noble; Questing is now ignored because it reached end of life. `fixes.yaml` records that distinction. This is a tracker review, not a claim that the submitted sponsorship bugs were accepted.
 
 The saved GDCM stash was compared with HEAD: the current tree already contains the `-1ubuntu1` Jammy debdiff and newer patch headers. It was preserved instead of applying an older patch set over the current files. Follow up on the existing Launchpad bugs during the weekly maintenance block.
+
+---
+
+## License
+
+The tooling, templates and documentation in this repository (`tools/`, `_template/`,
+`fixes.yaml`, the Markdown files) are licensed under the [Apache License 2.0](LICENSE).
+
+The patches and debdiffs under each package directory are derivative works of those
+packages and are distributed under **the license of the package they modify** (see
+`debian/copyright` of each source package). Apache-2.0 does not apply to them.
+
