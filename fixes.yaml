@@ -6,7 +6,7 @@
 # the regular (non-ESM) pocket; standard_published is the newest version Launchpad
 # publishes there for that series, i.e. what a machine without Ubuntu Pro gets.
 fixes:
-  - cve: CVE-2025-11021        # + CVE-2025-4945 (same patch)
+  - cve: CVE-2025-11021        # + CVE-2025-4945 (same patch file; 11021 coverage disputed, see notes)
     reviewed_at: "2026-09-29"
     status_source: https://ubuntu.com/security/CVE-2025-11021
     package: libsoup3
@@ -24,12 +24,14 @@ fixes:
     launchpad_bug: 2157576     # 404 when logged out on 2026-09-29: private or not public
     patch: libsoup3/CVE-2025-11021-CVE-2025-4945.patch
     notes: >-
-      Ubuntu cites MR !473 for both CVEs. Debian cites MR !482
-      (commit 9e1a427d, NULL checks in soup_date_time_to_string and
-      serialize_cookie) as the fix for CVE-2025-11021 and still lists trixie
-      3.6.5-3 as vulnerable, although that version already has !473. The patch
-      here carries !473 only; check whether !482 belongs in it before claiming
-      full coverage of CVE-2025-11021.
+      Coverage of CVE-2025-11021 is disputed. Ubuntu cites MR !473 for both
+      CVEs, and !473 is the only upstream change this patch carries. Debian
+      cites MR !482 (commit 9e1a427d, NULL checks in soup_date_time_to_string
+      and serialize_cookie) as the fix for CVE-2025-11021 and still lists
+      trixie 3.6.5-3 as vulnerable, although that version already has !473.
+      Until that is settled, this patch is claimed for CVE-2025-4945 and for
+      the parse_timezone() part of CVE-2025-11021 only, not as full coverage
+      of CVE-2025-11021.
     sources:
       - https://ubuntu.com/security/CVE-2025-11021
       - https://ubuntu.com/security/CVE-2025-4945
