@@ -193,6 +193,7 @@ _template/             → scaffolding for a new package fix
 tools/
   new-fix.sh           → bootstrap a new package folder from the template
   verify-patches.sh    → sanity-check every patch in the repo
+  check-readme-sync.py → fail if README.md or submit-sru.sh drift from fixes.yaml
   submit-sru.sh        → build source-only SRU uploads for every fix (Ubuntu only)
 libsoup3/              → CVE-2025-11021 / CVE-2025-4945
 libyaml-syck-perl/     → CVE-2025-11683
@@ -207,6 +208,7 @@ packaging diffs (`changelog.diff`, `*.debdiff`).
 ```bash
 ./tools/new-fix.sh <package> <CVE-id>   # scaffold from _template/
 ./tools/verify-patches.sh               # check everything still applies cleanly
+./tools/check-readme-sync.py            # README tables and submit-sru.sh match fixes.yaml
 ```
 
 ### Build the SRU uploads

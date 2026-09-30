@@ -35,4 +35,4 @@ echo "Created $pkg/ for $cve:"
 ls -1 "$dst" | sed 's/^/  /'
 echo
 echo "Next: fill in $pkg/$cve.patch (paste upstream diff verbatim),"
-echo "      then update README.md and fixes.yaml."
+echo "      then update README.md, fixes.yaml and tools/submit-sru.sh (tools/check-readme-sync.py checks they agree)."
