@@ -38,10 +38,12 @@ for a in "$@"; do
 done
 
 # --- registry: package | "series,series" | patch (relative to repo root) | "CVE,CVE" | summary
+# Series must match `affected` in fixes.yaml (tools/check-readme-sync.py checks it).
+# gdcm's questing debdiff stays in the repo, but questing is end of life: no upload.
 fixes=(
   "libsoup3|jammy|libsoup3/CVE-2025-11021-CVE-2025-4945.patch|CVE-2025-11021,CVE-2025-4945|out-of-bounds read in cookie date parsing"
   "libyaml-syck-perl|jammy,noble|libyaml-syck-perl/CVE-2025-11683.patch|CVE-2025-11683|out-of-bounds read on empty-key YAML hashes"
-  "gdcm|jammy,noble,questing|gdcm/CVE-2025-11266.patch|CVE-2025-11266|out-of-bounds write in DICOM fragment parsing"
+  "gdcm|jammy,noble|gdcm/CVE-2025-11266.patch|CVE-2025-11266|out-of-bounds write in DICOM fragment parsing"
 )
 
 die()  { echo "error: $*" >&2; exit 1; }

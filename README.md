@@ -35,9 +35,10 @@ public CVE and an upstream fix is fair game.
 
 Canonical ships automatic security updates for **main**, but **universe** packages are
 community-maintained - they only get fixes if someone does the SRU (Stable Release
-Update) work. For the CVEs below, fixes already exist in the **ESM (Ubuntu Pro)** pocket,
-but the standard pocket - what most users run - is still vulnerable. These patches bridge
-that gap, and are formatted so a maintainer can pick them up with zero rework.
+Update) work. For libsoup3 and YAML::Syck below, fixes already exist in the **ESM (Ubuntu
+Pro)** pocket, but the standard pocket - what most users run - is still vulnerable. For gdcm
+no supported Ubuntu release ships a fix at all. These patches bridge that gap, and are
+formatted so a maintainer can pick them up with zero rework.
 
 ---
 
@@ -52,8 +53,15 @@ that gap, and are formatted so a maintainer can pick them up with zero rework.
 | **ESM status** | ✅ `esm-apps/jammy: released (3.0.7-0ubuntu1+esm5)` |
 | **Standard status** | ❌ `jammy: needed` |
 | **Upstream fix** | [GNOME MR !473](https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/473) |
-| **Debian bug** | [#1116469](https://bugs.debian.org/1116469) |
+| **Debian bug** | [#1116469](https://bugs.debian.org/1116469) (closed; fixed in unstable 3.6.5-5) |
+| **Launchpad bug** | [LP: #2157576](https://bugs.launchpad.net/bugs/2157576) (not publicly visible on 2026-09-29) |
 | **Patch** | [`libsoup3/CVE-2025-11021-CVE-2025-4945.patch`](libsoup3/CVE-2025-11021-CVE-2025-4945.patch) |
+
+> Ubuntu attributes both CVEs to MR !473, which is what this patch carries. Debian
+> attributes CVE-2025-11021 to [MR !482](https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/482)
+> (NULL checks in `soup_date_time_to_string()` / cookie serialization) and still lists
+> trixie's 3.6.5-3, which has !473, as vulnerable. Until that is settled, claim this patch
+> for CVE-2025-4945 and for the `parse_timezone()` part of CVE-2025-11021 only.
 
 ### Track merge status
 - [Ubuntu CVE page](https://ubuntu.com/security/CVE-2025-11021)
@@ -73,6 +81,7 @@ that gap, and are formatted so a maintainer can pick them up with zero rework.
 | **ESM status** | ✅ `esm-apps/jammy: released (1.34-1ubuntu0.1~esm1)`, `esm-apps/noble: released (1.34-2ubuntu0.24.04.1~esm1)` |
 | **Standard status** | ❌ `jammy: needed`, `noble: needed` |
 | **Upstream fix** | [dcf4c84](https://github.com/cpan-authors/YAML-Syck/commit/dcf4c8477b82ef439f43fd20dc099082d096df02) (v1.36) |
+| **Launchpad bug** | [LP: #2157577](https://bugs.launchpad.net/bugs/2157577) (not publicly visible on 2026-09-29) |
 | **Patch** | [`libyaml-syck-perl/CVE-2025-11683.patch`](libyaml-syck-perl/CVE-2025-11683.patch) |
 
 ### Track merge status
@@ -82,22 +91,57 @@ that gap, and are formatted so a maintainer can pick them up with zero rework.
 
 ---
 
-## 🟡 CVE-2025-11266 - gdcm (jammy + noble + questing)
+## 🟡 CVE-2025-11266 - gdcm (jammy + noble)
 
 | | |
 |---|---|
 | **Severity** | MEDIUM (CVSS 6.6) |
 | **Issue** | OOB write in DICOM fragment parsing - missing bounds check before buffer access |
 | **Package** | `gdcm` |
-| **Affected** | `jammy`, `noble`, `questing` |
+| **Affected** | `jammy`, `noble` (`questing` reached end of life and is ignored; its debdiff is kept, not submitted) |
+| **ESM status** | none - no Ubuntu pocket carries a fix |
+| **Standard status** | ❌ `jammy: needed`, `noble: needed` |
 | **Upstream fix** | [5829c95](https://github.com/malaterre/GDCM/commit/5829c95c8ac3afa9a3a3413675e948959c28a789) (v3.2.2) |
-| **Debian bug** | [#1122862](https://bugs.debian.org/1122862) |
+| **Debian bug** | [#1122862](https://bugs.debian.org/1122862) (closed; fixed in unstable 3.0.24-11) |
+| **Launchpad bug** | [LP: #2157578](https://bugs.launchpad.net/bugs/2157578) (not publicly visible on 2026-09-29) |
 | **Patch** | [`gdcm/CVE-2025-11266.patch`](gdcm/CVE-2025-11266.patch) |
 
 ### Track merge status
 - [Ubuntu CVE page](https://ubuntu.com/security/CVE-2025-11266)
 - [Launchpad package](https://launchpad.net/ubuntu/+source/gdcm)
 - CLI: `rmadison gdcm`
+
+---
+
+## Status review - 2026-09-29
+
+Read from the live trackers on 2026-09-29. **No fix has landed in a standard Ubuntu pocket
+since the 2026-09-14 review**, and nothing is waiting in `-proposed`. None of the three
+Ubuntu tracker entries changed after 2026-09-14 (last updates: libsoup3 2025-12-11,
+YAML::Syck 2025-10-29, gdcm 2026-07-10).
+
+| Fix | Series | Ubuntu tracker | Standard pocket today (Launchpad) | Debian |
+|---|---|---|---|---|
+| libsoup3 CVE-2025-11021 / CVE-2025-4945 | jammy | released in `esm-apps` only | `3.0.7-0ubuntu1` (jammy-updates, 2022) | fixed in sid; bookworm/trixie vulnerable, no-dsa |
+| libyaml-syck-perl CVE-2025-11683 | jammy, noble | released in `esm-apps` only | `1.34-1build2` / `1.34-2build3` (release pocket) | fixed in bookworm, trixie and sid |
+| gdcm CVE-2025-11266 | jammy, noble | needed | `3.0.10-1build2` / `3.0.22-2.1ubuntu1` (release pocket) | fixed in sid; bookworm/trixie vulnerable, no-dsa |
+
+- The three sponsorship bugs (LP: #2157576, #2157577, #2157578) return 404 when logged out.
+  A private security bug looks the same, so their state can only be checked from the
+  filer's Launchpad account; this review makes no claim that they were accepted.
+- The Ubuntu tracker lists YAML::Syck as `needed` on resolute, but resolute publishes
+  1.36-1, which contains the upstream fix. Treated as tracker lag.
+- libsoup3: Ubuntu and Debian disagree on which upstream change fixes CVE-2025-11021
+  (see the note in its section).
+
+Sources: the Ubuntu CVE pages linked in each section, the
+[Debian security tracker](https://security-tracker.debian.org/tracker/) entries for each
+CVE, and Launchpad's publishing history for
+[libsoup3](https://launchpad.net/ubuntu/+source/libsoup3/+publishinghistory),
+[libyaml-syck-perl](https://launchpad.net/ubuntu/+source/libyaml-syck-perl/+publishinghistory)
+and [gdcm](https://launchpad.net/ubuntu/+source/gdcm/+publishinghistory).
+The previous review (2026-09-14) found the same standard-pocket state and marked gdcm on
+questing as ignored after its end of life.
 
 ---
 
@@ -184,20 +228,6 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
 
 ---
 
-<sub>Maintained by <b>Valentín Torassa</b> · part of the <b>VT Security</b> toolset ·
-companion to <a href="https://github.com/ValentinTorassa/PhantomLog">PhantomLog</a> and
-<a href="https://github.com/ValentinTorassa/VT-SecretShare">VT-SecretShare</a></sub>
-
-## Status review - 2026-09-14
-
-The Ubuntu trackers still list the Jammy libsoup3 fix and Jammy/Noble YAML::Syck fixes through ESM; no standard release is evidenced there. [libsoup3 tracker](https://ubuntu.com/security/CVE-2025-11021), [YAML::Syck tracker](https://ubuntu.com/security/CVE-2025-11683).
-
-[GDCM](https://ubuntu.com/security/CVE-2025-11266) remains vulnerable on Jammy/Noble; Questing is now ignored because it reached end of life. `fixes.yaml` records that distinction. This is a tracker review, not a claim that the submitted sponsorship bugs were accepted.
-
-The saved GDCM stash was compared with HEAD: the current tree already contains the `-1ubuntu1` Jammy debdiff and newer patch headers. It was preserved instead of applying an older patch set over the current files. Follow up on the existing Launchpad bugs during the weekly maintenance block.
-
----
-
 ## License
 
 The tooling, templates and documentation in this repository (`tools/`, `_template/`,
@@ -207,3 +237,8 @@ The patches and debdiffs under each package directory are derivative works of th
 packages and are distributed under **the license of the package they modify** (see
 `debian/copyright` of each source package). Apache-2.0 does not apply to them.
 
+---
+
+<sub>Maintained by <b>Valentín Torassa</b> · part of the <b>VT Security</b> toolset ·
+companion to <a href="https://github.com/ValentinTorassa/PhantomLog">PhantomLog</a> and
+<a href="https://github.com/ValentinTorassa/VT-SecretShare">VT-SecretShare</a></sub>

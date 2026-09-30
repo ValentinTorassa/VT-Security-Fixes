@@ -1,24 +1,44 @@
 # Machine-readable registry of fixes in this repo.
-# Keep in sync with the status table in README.md (tools/verify-patches.sh checks the patches).
+# The README tables must agree with it: tools/check-readme-sync.py checks that in CI,
+# and tools/verify-patches.sh checks the patches.
+#
+# reviewed_at is the date the live trackers were last read. "standard" is the state of
+# the regular (non-ESM) pocket; standard_published is the newest version Launchpad
+# publishes there for that series, i.e. what a machine without Ubuntu Pro gets.
 fixes:
   - cve: CVE-2025-11021        # + CVE-2025-4945 (same patch)
-    reviewed_at: "2026-09-14"
+    reviewed_at: "2026-09-29"
     status_source: https://ubuntu.com/security/CVE-2025-11021
     package: libsoup3
     component: universe
-    severity: high             # CVSS 7.5
+    severity: high             # CVSS 7.5 (Ubuntu priority: medium)
     summary: OOB read in cookie date parsing (integer overflow in parse_timezone)
     affected: [jammy]
     esm: { jammy: "released (3.0.7-0ubuntu1+esm5)" }
     standard: { jammy: needed }
+    standard_published: { jammy: "3.0.7-0ubuntu1 (jammy-updates, 2022-07-28)" }
     upstream: https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/473
     applied_upstream: "3.4.0"
-    debian_bug: 1116469
-    launchpad_bug: 2157576
+    debian_bug: 1116469        # closed and archived; fixed in unstable 3.6.5-5
+    debian_status: "fixed in forky/sid (3.6.6-1); bookworm and trixie vulnerable, no-dsa"
+    launchpad_bug: 2157576     # 404 when logged out on 2026-09-29: private or not public
     patch: libsoup3/CVE-2025-11021-CVE-2025-4945.patch
+    notes: >-
+      Ubuntu cites MR !473 for both CVEs. Debian cites MR !482
+      (commit 9e1a427d, NULL checks in soup_date_time_to_string and
+      serialize_cookie) as the fix for CVE-2025-11021 and still lists trixie
+      3.6.5-3 as vulnerable, although that version already has !473. The patch
+      here carries !473 only; check whether !482 belongs in it before claiming
+      full coverage of CVE-2025-11021.
+    sources:
+      - https://ubuntu.com/security/CVE-2025-11021
+      - https://ubuntu.com/security/CVE-2025-4945
+      - https://security-tracker.debian.org/tracker/CVE-2025-11021
+      - https://security-tracker.debian.org/tracker/CVE-2025-4945
+      - https://launchpad.net/ubuntu/+source/libsoup3/+publishinghistory
 
   - cve: CVE-2025-11683
-    reviewed_at: "2026-09-14"
+    reviewed_at: "2026-09-29"
     status_source: https://ubuntu.com/security/CVE-2025-11683
     package: libyaml-syck-perl
     component: universe
@@ -29,22 +49,43 @@ fixes:
       jammy: "released (1.34-1ubuntu0.1~esm1)"
       noble: "released (1.34-2ubuntu0.24.04.1~esm1)"
     standard: { jammy: needed, noble: needed }
+    standard_published:
+      jammy: "1.34-1build2 (release pocket, 2022-03-02)"
+      noble: "1.34-2build3 (release pocket, 2024-04-03)"
     upstream: https://github.com/cpan-authors/YAML-Syck/commit/dcf4c8477b82ef439f43fd20dc099082d096df02
     applied_upstream: "1.36"
-    launchpad_bug: 2157577
+    debian_status: "fixed in bookworm (1.34-2+deb12u1), trixie (1.34-2+deb13u1) and sid"
+    launchpad_bug: 2157577     # 404 when logged out on 2026-09-29: private or not public
     patch: libyaml-syck-perl/CVE-2025-11683.patch
+    notes: >-
+      The Ubuntu tracker lists resolute as "needed", but resolute publishes
+      1.36-1, which already contains the upstream fix; treated as tracker lag,
+      not as a new affected series.
+    sources:
+      - https://ubuntu.com/security/CVE-2025-11683
+      - https://security-tracker.debian.org/tracker/CVE-2025-11683
+      - https://launchpad.net/ubuntu/+source/libyaml-syck-perl/+publishinghistory
 
   - cve: CVE-2025-11266
-    reviewed_at: "2026-09-14"
+    reviewed_at: "2026-09-29"
     status_source: https://ubuntu.com/security/CVE-2025-11266
     package: gdcm
     component: universe
     severity: medium           # CVSS 6.6
     summary: OOB write in DICOM encapsulated PixelData fragment parsing
-    affected: [jammy, noble, questing]
-    standard: { jammy: needed, noble: needed, questing: "ignored (end of life; was needed)" }
+    affected: [jammy, noble]
+    standard: { jammy: needed, noble: needed }
+    standard_published:
+      jammy: "3.0.10-1build2 (release pocket, 2022-03-02)"
+      noble: "3.0.22-2.1ubuntu1 (release pocket, 2024-04-12)"
+    ignored: { questing: "end of life, was needed; its debdiff is kept but not submitted" }
     upstream: https://github.com/malaterre/GDCM/commit/5829c95c8ac3afa9a3a3413675e948959c28a789
     applied_upstream: "3.2.2"
-    debian_bug: 1122862
-    launchpad_bug: 2157578
+    debian_bug: 1122862        # closed and archived; fixed in unstable 3.0.24-11
+    debian_status: "fixed in forky/sid (3.0.24-14); bookworm and trixie vulnerable, no-dsa"
+    launchpad_bug: 2157578     # 404 when logged out on 2026-09-29: private or not public
     patch: gdcm/CVE-2025-11266.patch
+    sources:
+      - https://ubuntu.com/security/CVE-2025-11266
+      - https://security-tracker.debian.org/tracker/CVE-2025-11266
+      - https://launchpad.net/ubuntu/+source/gdcm/+publishinghistory
