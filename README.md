@@ -207,7 +207,7 @@ packaging diffs (`changelog.diff`, `*.debdiff`).
 
 ```bash
 ./tools/new-fix.sh <package> <CVE-id>   # scaffold from _template/
-./tools/verify-patches.sh               # check everything still applies cleanly
+./tools/verify-patches.sh               # DEP-3 headers and hunk line counts only; does not apply or build
 ./tools/check-readme-sync.py            # README tables and submit-sru.sh match fixes.yaml
 ```
 
