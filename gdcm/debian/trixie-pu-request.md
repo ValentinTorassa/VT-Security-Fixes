@@ -1,4 +1,4 @@
-<!-- DRAFT - DO NOT SEND YET. Target: Debian 13.9 (January 2027).
+<!-- DRAFT - DO NOT SEND YET. Target: Debian 13.9 (January 2027). The debian-med mail went out on 2026-11-02.
      Send only after debian-med replies to email-debian-med.md and the salsa MR
      is accepted (or the team asks us to file it ourselves), and preferably once
      the regression fix (upstream 9ced0f9, Debian bug #1152837) is in unstable:

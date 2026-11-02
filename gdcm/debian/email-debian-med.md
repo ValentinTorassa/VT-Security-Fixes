@@ -1,4 +1,4 @@
-<!-- DRAFT - NOT SENT. Plain-text mail: send everything below the "---" line.
+<!-- SENT on 2026-11-02 01:02 UTC from valentintorassacolombero@gmail.com (body below the "---" line).
      To:      debian-med@lists.debian.org
      Cc:      Emmanuel Arias <eamanu@debian.org>, Étienne Mollier <emollier@debian.org>
      Subject: gdcm: finishing 3.0.24-5+deb13u1 for trixie (security fixes)
@@ -9,8 +9,9 @@
 
 Hi,
 
-I would like to help get the outstanding gdcm security fixes into trixie,
-and I am writing first because Emmanuel has already started this work.
+I would like to help get the outstanding gdcm security fixes into
+trixie, and I am writing first because Emmanuel has already started this
+work.
 
 The debian/trixie branch on salsa has a 3.0.24-5+deb13u1 entry with the
 CVE-2025-11266 fix, prepared in February and not uploaded so far. The
@@ -46,13 +47,17 @@ The debdiff is ready to share.
 
 Some background: I prepared the Ubuntu backport of the upstream
 CVE-2025-11266 fix (upstream commit 5829c95) for jammy and noble, which
-is how I came to this package. This would be my first contribution to
-Debian, so corrections on process are very welcome.
+is how I came to this package. Apart from #1152837, this would be my
+first contribution to Debian, so corrections on process are very
+welcome.
 
 I have also prepared the same set for bookworm on top of the
 debian/bookworm branch (3.0.21-1+deb12u1, including Étienne's
-CVE-2024-* patches). As bookworm is now in LTS, I would offer that one
-to the LTS team separately, unless you prefer to handle it differently.
+CVE-2024-* patches). It has the same regression, so I will add the fix
+there too. As bookworm is now in LTS, I would offer that one to the LTS
+team separately, unless you prefer to handle it differently.
+
+I am not subscribed to the list, so please keep me in Cc.
 
 Thanks,
 Valentín Torassa
