@@ -1,15 +1,15 @@
-<!-- BORRADOR - NO ENVIAR TODAVIA.
-     Va recien despues de que debian-med conteste el mail de email-debian-med.md
-     y el MR en salsa este aceptado (o Emmanuel diga que lo mandes vos).
-     Antes de mandarlo conviene que el arreglo de la regresion (upstream 9ced0f9) este
-     tambien en unstable: el release team suele pedir que todo lo que entra por pu ya
-     este arreglado en unstable, y 3.0.24-14 todavia no lo tiene.
-     Se manda con `reportbug release.debian.org` (tipo "pu", suite trixie) o a mano
-     a submit@bugs.debian.org con estos pseudo-headers, adjuntando
-     gdcm_3.0.24-5+deb13u1_trixie.debdiff de esta carpeta.
-     La casilla "I reviewed all changes and I approve them" queda sin marcar a
-     proposito: la marcas vos despues de leer el debdiff.
-     Si el sponsor sube con otra fecha en debian/changelog, regenerar el debdiff. -->
+<!-- DRAFT - DO NOT SEND YET. Target: Debian 13.9 (January 2027).
+     Send only after debian-med replies to email-debian-med.md and the salsa MR
+     is accepted (or the team asks us to file it ourselves), and preferably once
+     the regression fix (upstream 9ced0f9, Debian bug #1152837) is in unstable:
+     the release team usually wants every pu change already fixed in unstable.
+     File it with `reportbug release.debian.org` (type "pu", suite trixie) or by
+     mail to submit@bugs.debian.org with these pseudo-headers, attaching
+     gdcm_3.0.24-5+deb13u1_trixie.debdiff from this folder.
+     The "I reviewed all changes and I approve them" box is left unticked on
+     purpose: tick it after reading the debdiff.
+     If the sponsor uploads with a different debian/changelog date, regenerate
+     the debdiff. -->
 
 To: submit@bugs.debian.org
 Subject: trixie-pu: package gdcm/3.0.24-5+deb13u1
@@ -121,6 +121,6 @@ unstable. The bullseye LTS update DLA-4652-1 shipped the same CVE fixes.
 The debian/trixie branch on salsa already carries the 3.0.24-5+deb13u1
 changelog entry and CVE-2025-11266.patch. This update extends that entry.
 Unstable (3.0.24-14) does not have upstream 9ced0f9 yet. The same patch
-is proposed there in <LINK: MR o bug para unstable>. I am not a Debian
-member, so the upload
+is proposed there in #1152837
+(https://bugs.debian.org/1152837). I am not a Debian member, so the upload
 will need a sponsor from the Debian Med team.
