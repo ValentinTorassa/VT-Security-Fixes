@@ -1,0 +1,755 @@
+diff -Nru gdcm-3.0.24/debian/changelog gdcm-3.0.24/debian/changelog
+--- gdcm-3.0.24/debian/changelog	2024-09-14 12:36:50.000000000 +0000
++++ gdcm-3.0.24/debian/changelog	2026-11-02 00:11:03.000000000 +0000
+@@ -1,3 +1,31 @@
++gdcm (3.0.24-5+deb13u1) trixie; urgency=medium
++
++  * Team upload.
++
++  [ Emmanuel Arias ]
++  * CVE-2025-11266.patch: Avoid out-of-bounds vulnerability. The issue
++    was triggered during parsing of a malformed DICOM file containing
++    encapsulated PixelData fragments. This vulnerability leads to a
++    segmentation fault caused by an out-of-bounds memory access due to
++    unsigned integer underflow in buffer indexing (Closes: #1122862).
++
++  [ Valentín Torassa ]
++  * CVE-2025-52582.patch: Prevent overlay extraction in case of malformed
++    overlay or image information (Closes: #1123576).
++  * CVE-2025-53618_CVE-2025-53619.patch: Add a frame size check to ensure
++    that the provided data corresponds to the buffer size. Fixes
++    CVE-2025-53618 and CVE-2025-53619 (Closes: #1123587).
++  * CVE-2025-48429.patch: Refactor the RLE header to ensure it conforms to
++    the DICOM standard (Closes: #1123589).
++  * CVE-2026-3650.patch: Reject Value Length exceeding stream size
++    (Closes: #1132042).
++  * CVE-2025-53618_CVE-2025-53619-regression.patch: Accept frames with
++    one byte of odd-length padding in the JPEG encoder, fixing a
++    regression from the CVE-2025-53618/CVE-2025-53619 fix (upstream
++    commit 9ced0f9).
++
++ -- Valentín Torassa <valentintorassacolombero@gmail.com>  Sun, 01 Nov 2026 21:15:00 -0300
++
+ gdcm (3.0.24-5) unstable; urgency=medium
+ 
+   * Team upload.
+diff -Nru gdcm-3.0.24/debian/patches/CVE-2025-11266.patch gdcm-3.0.24/debian/patches/CVE-2025-11266.patch
+--- gdcm-3.0.24/debian/patches/CVE-2025-11266.patch	1970-01-01 00:00:00.000000000 +0000
++++ gdcm-3.0.24/debian/patches/CVE-2025-11266.patch	2026-10-19 18:54:44.000000000 +0000
+@@ -0,0 +1,29 @@
++From 5829c95c8ac3afa9a3a3413675e948959c28a789 Mon Sep 17 00:00:00 2001
++From: Mathieu Malaterre <mathieu.malaterre@gmail.com>
++Date: Fri, 26 Sep 2025 10:04:53 +0200
++Subject: [PATCH] Fix VU#591834.1
++
++Original report is:
++
++Vulnerability VU#591834.1 (VU#591834)
++Date Added: 2025-08-21
++Description: An out-of-bounds read vulnerability exists in the Grassroots DICOM library (GDCM), specifically within the SequenceOfFragments::ReadValue method. The issue is triggered during parsing of a malformed DICOM file containing encapsulated PixelData fragments (compressed image data stored as multiple fragments).
++
++Origin: https://github.com/malaterre/GDCM/commit/5829c95c8ac3afa9a3a3413675e948959c28a789
++Bug-Debian-Security: https://security-tracker.debian.org/tracker/CVE-2025-11266
++Bug-Debian: htts://bugs.debian.org/1122862
++---
++ .../gdcmSequenceOfFragments.h                                   | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/Source/DataStructureAndEncodingDefinition/gdcmSequenceOfFragments.h
+++++ b/Source/DataStructureAndEncodingDefinition/gdcmSequenceOfFragments.h
++@@ -237,7 +237,7 @@
++       const size_t lastf = Fragments.size() - 1;
++       const ByteValue *bv = Fragments[ lastf ].GetByteValue();
++       const char *a = bv->GetPointer();
++-      gdcmAssertAlwaysMacro( (unsigned char)a[ bv->GetLength() - 3 ] == 0xfe );
+++      gdcmAssertAlwaysMacro( bv->GetLength() >= 3 && (unsigned char)a[ bv->GetLength() - 3 ] == 0xfe );
++       Fragments[ lastf ].SetByteValue( bv->GetPointer(), bv->GetLength() - 3 );
++       is.seekg( -11, std::ios::cur );
++       assert( is.good() );
+diff -Nru gdcm-3.0.24/debian/patches/CVE-2025-48429.patch gdcm-3.0.24/debian/patches/CVE-2025-48429.patch
+--- gdcm-3.0.24/debian/patches/CVE-2025-48429.patch	1970-01-01 00:00:00.000000000 +0000
++++ gdcm-3.0.24/debian/patches/CVE-2025-48429.patch	2026-10-19 18:55:11.000000000 +0000
+@@ -0,0 +1,189 @@
++From: pierre <pierre@intradys.com>
++Date: Thu, 8 Jan 2026 10:36:10 +0100
++Subject: [PATCH] Refactor the RLE header to ensure it conforms to the DICOM
++ standard.
++
++Origin: https://github.com/malaterre/GDCM/commit/0393310f8bb27c3bec8b67c6bfb18f71f6a15bb8
++Bug-Debian: https://bugs.debian.org/1123589
++Bug-Debian-Security: https://security-tracker.debian.org/tracker/CVE-2025-48429
++Bug-Freexian-Security: https://deb.freexian.com/extended-lts/tracker/CVE-2025-48429
++---
++ .../gdcmRLECodec.cxx                          | 105 +++++++++++++-----
++ 1 file changed, 76 insertions(+), 29 deletions(-)
++
++--- a/Source/MediaStorageAndFileFormat/gdcmRLECodec.cxx
+++++ b/Source/MediaStorageAndFileFormat/gdcmRLECodec.cxx
++@@ -19,6 +19,7 @@
++ #include "gdcmSequenceOfFragments.h"
++ #include "gdcmSmartPointer.h"
++ #include "gdcmSwapper.h"
+++# include <array>
++ 
++ #include <algorithm> // req C++11
++ #include <cstddef> // ptrdiff_t fix
++@@ -33,37 +34,73 @@
++ // TODO ideally this code should be in utilities for ease of reuse
++ class RLEHeader
++ {
++-public:
+++private:
++   uint32_t NumSegments;
++   uint32_t Offset[15];
+++public:
+++  uint32_t GetNumSegments() const { return NumSegments; }
+++  bool SetNumSegments(uint32_t num) 
+++    { 
+++      if (num > 15) 
+++        {
+++          gdcmErrorMacro("Number of segments cannot be bigger than 15");
+++          return false;
+++        }
+++      NumSegments = num;
+++      return true;
+++    };
+++  bool SetOffset(const std::array<uint32_t, 15> &offset) 
+++    {
+++      std::copy(offset.begin(), offset.end(), Offset);
+++      return true;
+++    };
+++  uint32_t GetOffset(size_t index) const 
+++    {
+++      if (index < 15) return Offset[index];
+++      return 0;
+++    };
+++  bool SetOffset(size_t index, uint32_t value) {
+++    if (index >= 15) return false;
+++    Offset[index] = value;
+++    return true;
+++  }
++ 
++-  void Print(std::ostream &os)
+++  bool Read(std::istream &is) 
++     {
++-    os << "NumSegments:" << NumSegments << "\n";
++-    for(int i=0; i<15; ++i)
++-      {
++-      os << i << ":" << Offset[i] << "\n";
+++      // read Header (64 bytes)
+++      uint32_t buffer[16] = {0};
+++      is.read(reinterpret_cast<char *>(buffer), 64);
+++      if (static_cast<size_t>(is.gcount()) != 64) 
+++        {
+++          gdcmErrorMacro("RLE Header truncated: expected 64 bytes, got " << is.gcount());
+++          return false;
+++        }
+++      assert(sizeof(uint32_t) * 16 == 64);
+++      SwapperNoOp::SwapArray(reinterpret_cast<uint32_t *>(buffer), 16);
+++      if (!SetNumSegments(buffer[0])) return false;
+++      memcpy(Offset, &buffer[1], sizeof(uint32_t) * 15);
+++      if (NumSegments >= 1) {
+++        if (Offset[0] != 64) return false;
+++      }
+++      // We just check that we are indeed at the proper position start+64
+++      return true;
+++    }
+++  void Print(std::ostream &os) 
+++    {
+++      os << "NumSegments:" << NumSegments << "\n";
+++      for (int i = 0; i < 15; ++i) {
+++        os << i << ":" << Offset[i] << "\n";
++       }
++     }
++ };
++ 
+++static_assert(sizeof(RLEHeader) == 64, "RLEHeader size must be 64 bits to comply with dicom standard");
++ class RLEFrame
++ {
++ public:
++   bool Read(std::istream &is)
++     {
++-    // read Header (64 bytes)
++-    is.read((char*)(&Header), sizeof(uint32_t)*16);
++-    assert( sizeof(uint32_t)*16 == 64 );
++-    assert( sizeof(RLEHeader) == 64 );
++-    SwapperNoOp::SwapArray((uint32_t*)&Header,16);
++-    uint32_t numSegments = Header.NumSegments;
++-    if( numSegments >= 1 )
++-      {
++-      if( Header.Offset[0] != 64 ) return false;
++-      }
++-    // We just check that we are indeed at the proper position start+64
++-    return true;
+++      return Header.Read(is);
++     }
++   void Print(std::ostream &os)
++     {
++@@ -379,7 +416,9 @@
++     assert( MaxNumSegments % 3 == 0 );
++     }
++ 
++-  RLEHeader header = { static_cast<uint32_t> ( MaxNumSegments ), { 64 } };
+++  RLEHeader header;
+++  header.SetNumSegments(static_cast<uint32_t>(MaxNumSegments));
+++  header.SetOffset({64});
++   // there cannot be any space in between the end of the RLE header and the start
++   // of the first RLE segment
++   //
++@@ -521,12 +560,12 @@
++         length += llength;
++         }
++       // update header
++-      header.Offset[1+seg] = (uint32_t)(header.Offset[seg] + length);
+++      header.SetOffset(1 + seg, (uint32_t)(header.GetOffset(seg) + length));
++ 
++       assert( data.str().size() == length );
++       datastr += data.str();
++       }
++-    header.Offset[MaxNumSegments] = 0;
+++    header.SetOffset(MaxNumSegments, 0);
++     std::stringstream os;
++     //header.Print( std::cout );
++     os.write((char*)&header,sizeof(header));
++@@ -769,7 +808,7 @@
++   RLEFrame &frame = Internals->Frame;
++   if( !frame.Read(is) )
++      return false;
++-  unsigned long numSegments = frame.Header.NumSegments;
+++  unsigned long numSegments = frame.Header.GetNumSegments();
++ 
++   unsigned long length = Length;
++   assert( length );
++@@ -801,18 +840,24 @@
++     {
++     unsigned long numberOfReadBytes = 0;
++     std::streampos pos = is.tellg() - start;
++-    if ( frame.Header.Offset[i] - pos != 0 )
+++    if (frame.Header.GetOffset(i) > BufferLength) 
+++      {
+++        gdcmErrorMacro("Offset is bigger then buffer Length");
+++        return false;
+++      }
+++
+++    if ( frame.Header.GetOffset(i) - pos != 0 )
++       {
++       // ACUSON-24-YBR_FULL-RLE.dcm
++       // D_CLUNIE_CT1_RLE.dcm
++       // This should be at most the \0 padding
++       //gdcmWarningMacro( "RLE Header says: " << frame.Header.Offset[i] <<
++       //   " when it should says: " << pos << std::endl );
++-      std::streamoff check = frame.Header.Offset[i] - pos;//should it be a streampos or a uint32? mmr
+++      std::streamoff check = frame.Header.GetOffset(i) - pos;//should it be a streampos or a uint32? mmr
++       // check == 2 for gdcmDataExtra/gdcmSampleData/US_DataSet/GE_US/2929J686-breaker
++       //assert( check == 1 || check == 2);
++       (void)check; //warning removal
++-      is.seekg( frame.Header.Offset[i] + start, std::ios::beg );
+++      is.seekg(frame.Header.GetOffset(i) + start, std::ios::beg);
++       }
++ 
++     unsigned long numOutBytes = 0;
++@@ -865,8 +910,8 @@
++      return false;
++   // numsegments = num_comp * bpp / 8;
++   // numsegments >0 && numsegments <= 12
++-  uint32_t bytespercomp = frame.Header.NumSegments;
++-  if( frame.Header.NumSegments % 3 == 0 )
+++  uint32_t bytespercomp = frame.Header.GetNumSegments();
+++  if (frame.Header.GetNumSegments() % 3 == 0)
++   {
++     PI = PhotometricInterpretation::RGB;
++     PlanarConfiguration = 1;
+diff -Nru gdcm-3.0.24/debian/patches/CVE-2025-52582.patch gdcm-3.0.24/debian/patches/CVE-2025-52582.patch
+--- gdcm-3.0.24/debian/patches/CVE-2025-52582.patch	1970-01-01 00:00:00.000000000 +0000
++++ gdcm-3.0.24/debian/patches/CVE-2025-52582.patch	2026-10-19 18:55:11.000000000 +0000
+@@ -0,0 +1,93 @@
++Author: pleduff <pierre.ldff@gmail.com>
++Date: Mon, 9 Nov 2020 12:29:45 +0100
++
++    Fix bug #512: Crash when reading corrupted Jpeg2000 files
++
++    Prevent overlay extraction in case of malformed overlay or image information.
++
++    Add warning to prevent user
++
++Origin: https://github.com/malaterre/GDCM/commit/14825ceb1cb6855f32e726ee5cd2968e3051da2a
++Bug-Debian: https://bugs.debian.org/1123576
++Bug-Debian-Security: https://security-tracker.debian.org/tracker/CVE-2025-52582
++Bug-Freexian-Security: https://deb.freexian.com/extended-lts/tracker/CVE-2025-52582
++
++---
++ Source/MediaStorageAndFileFormat/gdcmJPEG2000Codec.cxx | 2 ++
++ 1 file changed, 2 insertions(+)
++
++--- a/Source/MediaStorageAndFileFormat/gdcmJPEG2000Codec.cxx
+++++ b/Source/MediaStorageAndFileFormat/gdcmJPEG2000Codec.cxx
++@@ -1420,6 +1420,8 @@
++   opj_stream_t *cio = nullptr;
++   opj_image_t *image = nullptr;
++   const unsigned char *src = (const unsigned char*)dummy_buffer;
+++  if(!src)
+++	  return false ;
++   size_t file_length = buf_size;
++ 
++   /* set decoding parameters to default values */
++--- a/Source/MediaStorageAndFileFormat/gdcmPixmapReader.cxx
+++++ b/Source/MediaStorageAndFileFormat/gdcmPixmapReader.cxx
++@@ -546,7 +546,44 @@
++           {
++           gdcmWarningMacro( "Bits Allocated are wrong. Correcting." );
++           ov.SetBitsAllocated( pixeldata.GetPixelFormat().GetBitsAllocated() );
++-          }
+++        }
+++        const DataElement &pixeldataDe = ds.GetDataElement(Tag(0x7fe0, 0x0010));
+++        const ByteValue *bv = pixeldataDe.GetByteValue();
+++        if (!bv) {
+++          gdcmWarningMacro(
+++              "Could not extract overlay from encapsulated stream.");
+++          continue;
+++        }
+++        unsigned long computedFramePixelsNb =
+++            pixeldata.GetDimension(0) * pixeldata.GetDimension(1);
+++
+++        if (pixeldata.GetPixelFormat().GetPixelSize() == 0 ||
+++            computedFramePixelsNb >
+++                bv->GetLength() / pixeldata.GetPixelFormat().GetPixelSize()) {
+++          gdcmWarningMacro("Image information is not persistent. Can't extract overlay #"
+++              << idxoverlays);
+++          continue;
+++        }
+++        signed short ovOriginY = ov.GetOrigin()[0];
+++        signed short ovOriginX = ov.GetOrigin()[1];
+++        long startPixel =
+++            (ovOriginX - 1) + (ovOriginY - 1) * pixeldata.GetDimension(0);
+++        if (startPixel < 0 ||
+++            (unsigned long)startPixel >= computedFramePixelsNb) {
+++          gdcmWarningMacro(
+++              "Origin is not in image buffer. Can't extract overlay #"
+++              << idxoverlays);
+++          continue;
+++        }
+++        unsigned long lastPixelAccessed =
+++            (unsigned long)startPixel +
+++            (ov.GetRows() - 1) * pixeldata.GetDimension(0) +
+++            (ov.GetColumns() - 1);
+++        if (lastPixelAccessed >= computedFramePixelsNb) {
+++          gdcmWarningMacro("Overlay not fit image buffer. Can't extract overlay "
+++                           << idxoverlays);
+++          continue;
+++        }
++ 
++         if( !ov.GrabOverlayFromPixelData(ds) )
++           {
++--- a/Source/MediaStorageAndFileFormat/gdcmOverlay.h
+++++ b/Source/MediaStorageAndFileFormat/gdcmOverlay.h
++@@ -93,7 +93,12 @@
++ 
++   /// set overlay from byte array + length
++   void SetOverlay(const char *array, size_t length);
++-  ///
+++
+++  /// \warning Before calling this method, you must verify the consistency
+++  /// between the image metadata (Image PixelFormat, Rows, Columns) and the
+++  /// overlay parameters. This pre-verification is required to ensure that the
+++  /// bit-depth is compatible and that the overlay data fits within the
+++  /// allocated pixel storage.
++   bool GrabOverlayFromPixelData(DataSet const &ds);
++ 
++   /// Return the Overlay Data as ByteValue:
+diff -Nru gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619-regression.patch gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619-regression.patch
+--- gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619-regression.patch	1970-01-01 00:00:00.000000000 +0000
++++ gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619-regression.patch	2026-11-02 00:10:55.000000000 +0000
+@@ -0,0 +1,26 @@
++From: Mathieu Malaterre <mathieu.malaterre@gmail.com>
++Date: Mon, 29 Jun 2026 15:02:10 +0200
++Subject: [PATCH] Accepth odd length
++
++Fix regression f0e359c87947326c7fb2f7b91ecbe351e9d8c683
++
++The frame size check added by CVE-2025-53618_CVE-2025-53619.patch
++rejects a frame that carries the one byte of padding DICOM adds to
++odd-length values, so JPEG encoding (for example gdcmconv --jpeg)
++fails on images such as a 3x3 RGB one.
++
++Origin: upstream, https://github.com/malaterre/GDCM/commit/9ced0f9ae1d6ecb9e84c2a06db36c9697815108f
++Applied-Upstream: 3.2.9
++Last-Update: 2026-11-01
++---
++--- a/Source/MediaStorageAndFileFormat/gdcmJPEGBITSCodec.hxx
+++++ b/Source/MediaStorageAndFileFormat/gdcmJPEGBITSCodec.hxx
++@@ -1171,7 +1171,7 @@ bool JPEGBITSCodec::InternalCode(const c
++   // Check if provided buffer correspond to image parameters for current frame
++   size_t expected_frame_size = (size_t)image_width * image_height *
++                                this->GetPixelFormat().GetPixelSize();
++-  if (len != expected_frame_size) {
+++  if (len != expected_frame_size && len != expected_frame_size + 1) {
++     gdcmErrorMacro("Frame size don't match");
++     return false;
++   }
+diff -Nru gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619.patch gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619.patch
+--- gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619.patch	1970-01-01 00:00:00.000000000 +0000
++++ gdcm-3.0.24/debian/patches/CVE-2025-53618_CVE-2025-53619.patch	2026-10-19 18:55:11.000000000 +0000
+@@ -0,0 +1,31 @@
++From: pierre <pierre@intradys.com>
++Date: Thu, 8 Jan 2026 15:58:32 +0100
++Subject: [PATCH] Add a frame size check to ensure that the provided data
++ corresponds to the buffer size
++
++Origin: https://github.com/malaterre/GDCM/commit/f0e359c87947326c7fb2f7b91ecbe351e9d8c683
++Bug-Debian: https://bugs.debian.org/1123587
++Bug-Debian-Security: https://security-tracker.debian.org/tracker/CVE-2025-53618
++Bug-Debian-Security: https://security-tracker.debian.org/tracker/CVE-2025-53619
++Bug-Freexian-Security: https://deb.freexian.com/extended-lts/tracker/CVE-2025-53618
++Bug-Freexian-Security: https://deb.freexian.com/extended-lts/tracker/CVE-2025-53619
++---
++ Source/MediaStorageAndFileFormat/gdcmJPEGBITSCodec.hxx | 7 +++++++
++ 1 file changed, 7 insertions(+)
++
++--- a/Source/MediaStorageAndFileFormat/gdcmJPEGBITSCodec.hxx
+++++ b/Source/MediaStorageAndFileFormat/gdcmJPEGBITSCodec.hxx
++@@ -1166,6 +1166,13 @@
++   int image_height = dims[1];  /* Number of rows in image */
++   int image_width = dims[0];    /* Number of columns in image */
++ 
+++  // Check if provided buffer correspond to image parameters for current frame
+++  size_t expected_frame_size = (size_t)image_width * image_height *
+++                               this->GetPixelFormat().GetPixelSize();
+++  if (len != expected_frame_size) {
+++    gdcmErrorMacro("Frame size don't match");
+++    return false;
+++  }
++   /* This struct contains the JPEG compression parameters and pointers to
++    * working space (which is allocated as needed by the JPEG library).
++    * It is possible to have several such structures, representing multiple
+diff -Nru gdcm-3.0.24/debian/patches/CVE-2026-3650.patch gdcm-3.0.24/debian/patches/CVE-2026-3650.patch
+--- gdcm-3.0.24/debian/patches/CVE-2026-3650.patch	1970-01-01 00:00:00.000000000 +0000
++++ gdcm-3.0.24/debian/patches/CVE-2026-3650.patch	2026-10-19 18:55:17.000000000 +0000
+@@ -0,0 +1,315 @@
++From: Matt McCormick <matt@fideus.io>
++Date: Wed, 15 Apr 2026 16:24:50 -0400
++Subject: [PATCH] Fix CVE-2026-3650: reject Value Length exceeding stream size
++
++A crafted DICOM file could specify an arbitrarily large Value Length
++field (up to ~4 GB), causing ByteValue::SetLength() to attempt a
++massive memory allocation before any stream data is read. This enables
++denial-of-service via memory exhaustion.
++
++Add stream-size validation in ExplicitDataElement::ReadValue(),
++ImplicitDataElement::ReadValue(), Fragment::ReadValue(), and
++Fragment::ReadBacktrack(). Before allocating a ByteValue, the code
++now compares the declared VL against the remaining bytes in the
++stream via tellg()/seekg(). Non-seekable streams skip the check
++gracefully.
++
++Also fix out-of-bounds array accesses in SequenceOfFragments where
++bv->GetLength() - N was used without verifying minimum length,
++affecting lines that use gdcmAssertAlwaysMacro (active in release).
++
++Add TestCVE20263650 covering Explicit VR, Implicit VR, and Fragment
++code paths with a 1 GB VL on a ~20-byte stream.
++
++Origin: backport, https://github.com/malaterre/GDCM/commit/9d65a217c958968a74c14b10388d03ca61953a74
++Bug-Debian-Security: https://security-tracker.debian.org/tracker/CVE-2026-3650
++Bug-Freexian-Security: https://deb.freexian.com/extended-lts/tracker/CVE-2026-3650
++Bug-Debian: htts://bugs.debian.org/1132042
++---
++ .../gdcmExplicitDataElement.txx               |  17 +++
++ .../gdcmFragment.h                            |  24 +++
++ .../gdcmImplicitDataElement.txx               |  17 +++
++ .../gdcmSequenceOfFragments.h                 |   6 +-
++ .../Cxx/CMakeLists.txt                        |   1 +
++ .../Cxx/TestCVE20263650.cxx                   | 144 ++++++++++++++++++
++ 6 files changed, 206 insertions(+), 3 deletions(-)
++ create mode 100644 Testing/Source/DataStructureAndEncodingDefinition/Cxx/TestCVE20263650.cxx
++
++--- a/Source/DataStructureAndEncodingDefinition/gdcmExplicitDataElement.txx
+++++ b/Source/DataStructureAndEncodingDefinition/gdcmExplicitDataElement.txx
++@@ -237,6 +237,23 @@
++     {
++     //assert( TagField != Tag(0x7fe0,0x0010) );
++     ValueField = new ByteValue;
+++    if( readvalues )
+++      {
+++      const std::streampos cur = is.tellg();
+++      if( cur != std::streampos(-1) )
+++        {
+++        is.seekg(0, std::ios::end);
+++        const std::streampos end = is.tellg();
+++        is.seekg(cur);
+++        if( end != std::streampos(-1) && is.good()
+++          && static_cast<uint64_t>(end - cur) < static_cast<uint32_t>(ValueLengthField) )
+++          {
+++          gdcmWarningMacro( "Value Length " << ValueLengthField
+++            << " exceeds remaining stream size for tag " << TagField );
+++          throw Exception( "Value Length exceeds remaining stream size" );
+++          }
+++        }
+++      }
++     }
++   // We have the length we should be able to read the value
++   this->SetValueFieldLength( ValueLengthField, readvalues );
++--- a/Source/DataStructureAndEncodingDefinition/gdcmFragment.h
+++++ b/Source/DataStructureAndEncodingDefinition/gdcmFragment.h
++@@ -91,6 +91,18 @@
++     {
++     // Self
++     SmartPointer<ByteValue> bv = new ByteValue;
+++    const std::streampos cur = is.tellg();
+++    if( cur != std::streampos(-1) )
+++      {
+++      is.seekg(0, std::ios::end);
+++      const std::streampos end = is.tellg();
+++      is.seekg(cur);
+++      if( end != std::streampos(-1) && is.good()
+++        && static_cast<uint64_t>(end - cur) < static_cast<uint32_t>(ValueLengthField) )
+++        {
+++        throw Exception( "Fragment Value Length exceeds remaining stream size" );
+++        }
+++      }
++     bv->SetLength(ValueLengthField);
++     if( !bv->Read<TSwap>(is) )
++       {
++@@ -144,6 +156,18 @@
++ 
++     // Self
++     SmartPointer<ByteValue> bv = new ByteValue;
+++    const std::streampos cur2 = is.tellg();
+++    if( cur2 != std::streampos(-1) )
+++      {
+++      is.seekg(0, std::ios::end);
+++      const std::streampos end2 = is.tellg();
+++      is.seekg(cur2);
+++      if( end2 != std::streampos(-1) && is.good()
+++        && static_cast<uint64_t>(end2 - cur2) < static_cast<uint32_t>(ValueLengthField) )
+++        {
+++        throw Exception( "Fragment Value Length exceeds remaining stream size" );
+++        }
+++      }
++     bv->SetLength(ValueLengthField);
++     if( !bv->Read<TSwap>(is) )
++       {
++--- a/Source/DataStructureAndEncodingDefinition/gdcmImplicitDataElement.txx
+++++ b/Source/DataStructureAndEncodingDefinition/gdcmImplicitDataElement.txx
++@@ -215,6 +215,23 @@
++     ValueLengthField = 202; // 0xca
++     }
++ #endif
+++  if( !ValueLengthField.IsUndefined() && readvalues )
+++    {
+++    const std::streampos cur = is.tellg();
+++    if( cur != std::streampos(-1) )
+++      {
+++      is.seekg(0, std::ios::end);
+++      const std::streampos end = is.tellg();
+++      is.seekg(cur);
+++      if( end != std::streampos(-1) && is.good()
+++        && static_cast<uint64_t>(end - cur) < static_cast<uint32_t>(ValueLengthField) )
+++        {
+++        gdcmWarningMacro( "Value Length " << ValueLengthField
+++          << " exceeds remaining stream size for tag " << TagField );
+++        throw Exception( "Value Length exceeds remaining stream size" );
+++        }
+++      }
+++    }
++   // We have the length we should be able to read the value
++   this->SetValueFieldLength( ValueLengthField, readvalues );
++   bool failed;
++--- a/Source/DataStructureAndEncodingDefinition/gdcmSequenceOfFragments.h
+++++ b/Source/DataStructureAndEncodingDefinition/gdcmSequenceOfFragments.h
++@@ -167,7 +167,7 @@
++       {
++       assert( Fragments.size() == 1 );
++       const ByteValue *bv = Fragments[0].GetByteValue();
++-      assert( (unsigned char)bv->GetPointer()[ bv->GetLength() - 1 ] == 0xfe );
+++      assert( bv->GetLength() >= 1 && (unsigned char)bv->GetPointer()[ bv->GetLength() - 1 ] == 0xfe );
++       // Yes this is an extra copy, this is a bug anyway, go fix YOUR code
++       Fragments[0].SetByteValue( bv->GetPointer(), bv->GetLength() - 1 );
++       gdcmWarningMacro( "JPEG Fragment length was declared with an extra byte"
++@@ -188,7 +188,7 @@
++       const size_t lastf = Fragments.size() - 1;
++       const ByteValue *bv = Fragments[ lastf ].GetByteValue();
++       const char *a = bv->GetPointer();
++-      gdcmAssertAlwaysMacro( (unsigned char)a[ bv->GetLength() - 1 ] == 0xfe );
+++      gdcmAssertAlwaysMacro( bv->GetLength() >= 1 && (unsigned char)a[ bv->GetLength() - 1 ] == 0xfe );
++       Fragments[ lastf ].SetByteValue( bv->GetPointer(), bv->GetLength() - 1 );
++       is.seekg( -9, std::ios::cur );
++       assert( is.good() );
++@@ -212,7 +212,7 @@
++       const size_t lastf = Fragments.size() - 1;
++       const ByteValue *bv = Fragments[ lastf ].GetByteValue();
++       const char *a = bv->GetPointer();
++-      gdcmAssertAlwaysMacro( (unsigned char)a[ bv->GetLength() - 2 ] == 0xfe );
+++      gdcmAssertAlwaysMacro( bv->GetLength() >= 2 && (unsigned char)a[ bv->GetLength() - 2 ] == 0xfe );
++       Fragments[ lastf ].SetByteValue( bv->GetPointer(), bv->GetLength() - 2 );
++       is.seekg( -10, std::ios::cur );
++       assert( is.good() );
++--- a/Testing/Source/DataStructureAndEncodingDefinition/Cxx/CMakeLists.txt
+++++ b/Testing/Source/DataStructureAndEncodingDefinition/Cxx/CMakeLists.txt
++@@ -47,6 +47,7 @@
++   TestVL.cxx
++   TestVM.cxx
++   TestVR.cxx
+++  TestCVE20263650.cxx
++   #TestValue.cxx
++   #TestTorture.cxx
++   TestElement2.cxx
++--- /dev/null
+++++ b/Testing/Source/DataStructureAndEncodingDefinition/Cxx/TestCVE20263650.cxx
++@@ -0,0 +1,144 @@
+++/*=========================================================================
+++
+++  Program: GDCM (Grassroots DICOM). A DICOM library
+++
+++  Copyright (c) 2006-2011 Mathieu Malaterre
+++  All rights reserved.
+++  See Copyright.txt or http://gdcm.sourceforge.net/Copyright.html for details.
+++
+++     This software is distributed WITHOUT ANY WARRANTY; without even
+++     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+++     PURPOSE.  See the above copyright notice for more information.
+++
+++=========================================================================*/
+++#include "gdcmExplicitDataElement.h"
+++#include "gdcmImplicitDataElement.h"
+++#include "gdcmFragment.h"
+++#include "gdcmSwapper.h"
+++
+++#include <sstream>
+++#include <new>
+++
+++// CVE-2026-3650: Verify that crafted DICOM data elements with a Value Length
+++// exceeding the remaining stream size are rejected without attempting the
+++// allocation.
+++
+++static int TestExplicitVR()
+++{
+++  // Explicit VR data element: Tag (0008,0060), VR = OB, VL = 1 GB, 10 bytes data
+++  std::stringstream ss;
+++  const uint16_t group = 0x0008;
+++  const uint16_t element = 0x0060;
+++  ss.write(reinterpret_cast<const char*>(&group), 2);
+++  ss.write(reinterpret_cast<const char*>(&element), 2);
+++  ss.write("OB", 2);
+++  const uint16_t reserved = 0;
+++  ss.write(reinterpret_cast<const char*>(&reserved), 2);
+++  const uint32_t vl = 0x40000000;
+++  ss.write(reinterpret_cast<const char*>(&vl), 4);
+++  const char data[10] = {};
+++  ss.write(data, sizeof(data));
+++
+++  gdcm::ExplicitDataElement de;
+++  try
+++    {
+++    de.Read<gdcm::SwapperNoOp>(ss);
+++    std::cerr << "ERROR: ExplicitDataElement::Read should have thrown" << std::endl;
+++    return 1;
+++    }
+++  catch(const gdcm::Exception &)
+++    {
+++    return 0;
+++    }
+++  catch(const std::bad_alloc &)
+++    {
+++    std::cerr << "ERROR: ExplicitDataElement allocated memory for oversized VL" << std::endl;
+++    return 1;
+++    }
+++  catch(...)
+++    {
+++    std::cerr << "ERROR: ExplicitDataElement::Read threw unexpected exception" << std::endl;
+++    return 1;
+++    }
+++}
+++
+++static int TestImplicitVR()
+++{
+++  // Implicit VR data element: Tag (0008,0060), VL = 1 GB, 10 bytes data
+++  std::stringstream ss;
+++  const uint16_t group = 0x0008;
+++  const uint16_t element = 0x0060;
+++  ss.write(reinterpret_cast<const char*>(&group), 2);
+++  ss.write(reinterpret_cast<const char*>(&element), 2);
+++  const uint32_t vl = 0x40000000;
+++  ss.write(reinterpret_cast<const char*>(&vl), 4);
+++  const char data[10] = {};
+++  ss.write(data, sizeof(data));
+++
+++  gdcm::ImplicitDataElement de;
+++  try
+++    {
+++    de.Read<gdcm::SwapperNoOp>(ss);
+++    std::cerr << "ERROR: ImplicitDataElement::Read should have thrown" << std::endl;
+++    return 1;
+++    }
+++  catch(const gdcm::Exception &)
+++    {
+++    return 0;
+++    }
+++  catch(const std::bad_alloc &)
+++    {
+++    std::cerr << "ERROR: ImplicitDataElement allocated memory for oversized VL" << std::endl;
+++    return 1;
+++    }
+++  catch(...)
+++    {
+++    std::cerr << "ERROR: ImplicitDataElement::Read threw unexpected exception" << std::endl;
+++    return 1;
+++    }
+++}
+++
+++static int TestFragment()
+++{
+++  // Fragment: Item tag (fffe,e000), VL = 1 GB, 10 bytes data
+++  std::stringstream ss;
+++  const uint16_t group = 0xfffe;
+++  const uint16_t element = 0xe000;
+++  ss.write(reinterpret_cast<const char*>(&group), 2);
+++  ss.write(reinterpret_cast<const char*>(&element), 2);
+++  const uint32_t vl = 0x40000000;
+++  ss.write(reinterpret_cast<const char*>(&vl), 4);
+++  const char data[10] = {};
+++  ss.write(data, sizeof(data));
+++
+++  gdcm::Fragment frag;
+++  try
+++    {
+++    frag.Read<gdcm::SwapperNoOp>(ss);
+++    std::cerr << "ERROR: Fragment::Read should have thrown" << std::endl;
+++    return 1;
+++    }
+++  catch(const gdcm::Exception &)
+++    {
+++    return 0;
+++    }
+++  catch(const std::bad_alloc &)
+++    {
+++    std::cerr << "ERROR: Fragment allocated memory for oversized VL" << std::endl;
+++    return 1;
+++    }
+++  catch(...)
+++    {
+++    std::cerr << "ERROR: Fragment::Read threw unexpected exception" << std::endl;
+++    return 1;
+++    }
+++}
+++
+++int TestCVE20263650(int, char *[])
+++{
+++  int ret = 0;
+++  ret += TestExplicitVR();
+++  ret += TestImplicitVR();
+++  ret += TestFragment();
+++  return ret;
+++}
+diff -Nru gdcm-3.0.24/debian/patches/series gdcm-3.0.24/debian/patches/series
+--- gdcm-3.0.24/debian/patches/series	2024-09-14 11:03:55.000000000 +0000
++++ gdcm-3.0.24/debian/patches/series	2026-11-02 00:10:48.000000000 +0000
+@@ -6,3 +6,9 @@
+ de650849a1f294dda8401e2925c40daec51d0d3b.patch
+ 3be6c2fa0945c91889bcf06e8c20e88f69692dd5.patch
+ cxx-standard-20.patch
++CVE-2025-11266.patch
++CVE-2025-52582.patch
++CVE-2025-53618_CVE-2025-53619.patch
++CVE-2025-48429.patch
++CVE-2026-3650.patch
++CVE-2025-53618_CVE-2025-53619-regression.patch
