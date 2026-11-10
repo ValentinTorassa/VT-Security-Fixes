@@ -1,11 +1,11 @@
-<!-- DRAFT - NOT SENT. Read the patch and the test results before sending.
+<!-- SENT on 2026-11-10 17:21 UTC from valentintorassacolombero@gmail.com (body below the "---" line).
      To:      1136204@bugs.debian.org
      Cc:      Christoph Jahnke <dev@cjahnke.de>, Andreas Tille <tille@debian.org>,
               Santiago Vila <sanvila@debian.org>
      Subject: Re: Bug#1136204: invesalius: CVE-2024-44825
      Attach:  ../CVE-2024-44825.patch
-     "Control: tags -1 + patch" is a BTS command: it must stay as the first
-     line of the body.
+     "Control: tags -1 + patch" is a BTS command: it is the first line of the
+     body.
      The trixie update (invesalius_3.1.99998-7+deb13u1_trixie.debdiff in this
      folder) is not proposed here. The release team wants a fix in unstable
      before it accepts it in a point release, so this reply comes first. -->

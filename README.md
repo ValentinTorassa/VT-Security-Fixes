@@ -128,8 +128,8 @@ State on 2026-11-10. **None of these is in the Debian archive yet.**
 | `gdcm` | unstable | Regression of the CVE-2025-53618 / CVE-2025-53619 patch | [#1152837](https://bugs.debian.org/1152837) | Reported with a patch; open |
 | `gdcm` | trixie (13) | CVE-2025-11266, CVE-2025-48429, CVE-2025-52582, CVE-2025-53618, CVE-2025-53619, CVE-2026-3650 | [#1153126](https://bugs.debian.org/1153126) | `trixie-pu` request filed with the [debdiff](gdcm/debian/gdcm_3.0.24-5+deb13u1_trixie.debdiff); agreed with the team, waiting for the release team |
 | `gdcm` | bookworm (12, LTS) | The same six CVEs | debian-med list | [Debdiff](gdcm/debian/gdcm_3.0.21-1+deb12u1_bookworm.debdiff) sent on 2026-11-05; a Debian developer is reviewing it |
-| `invesalius` | unstable, then trixie (13) | CVE-2024-44825, plus CVE-2024-42845 in trixie | [#1136204](https://bugs.debian.org/1136204) | [Patch](invesalius/CVE-2024-44825.patch) and [trixie debdiff](invesalius/debian/invesalius_3.1.99998-7+deb13u1_trixie.debdiff) built and tested; not submitted yet |
-| `pydicom` | trixie (13) | CVE-2026-32711 | [#1131492](https://bugs.debian.org/1131492) | [Patch](pydicom/CVE-2026-32711.patch) and [debdiff](pydicom/debian/pydicom_2.4.3-2+deb13u1_trixie.debdiff) built and tested; not submitted yet |
+| `invesalius` | unstable, then trixie (13) | CVE-2024-44825, plus CVE-2024-42845 in trixie | [#1136204](https://bugs.debian.org/1136204) | [Patch](invesalius/CVE-2024-44825.patch) sent to the bug on 2026-11-10, with test results for it and for the patch already proposed there; open. The [trixie debdiff](invesalius/debian/invesalius_3.1.99998-7+deb13u1_trixie.debdiff) waits for the fix in unstable |
+| `pydicom` | trixie (13) | CVE-2026-32711 | [#1131492](https://bugs.debian.org/1131492) | [Debdiff](pydicom/debian/pydicom_2.4.3-2+deb13u1_trixie.debdiff) with the upstream [patch](pydicom/CVE-2026-32711.patch) sent to the debian-med list on 2026-11-10; the `trixie-pu` request waits for the team's reply |
 
 Each of these package folders has a `debian/` subfolder with the debdiff and the text of
 what was sent or is going to be sent: the mail to the team, the bug report or reply, and

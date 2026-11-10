@@ -53,8 +53,8 @@ released as 2.4.5), limited to pydicom/fileset.py and its tests. It adds
 a check that every Referenced File ID is relative and resolves inside of
 the File-set root, and raises PermissionError otherwise. A DICOMDIR that
 refers to files outside of its own directory is rejected from now on,
-which is the intended change. One private property, RecordNode._file_id, becomes the
-method RecordNode.file_id_path().
+which is the intended change. One private property,
+RecordNode._file_id, becomes the method RecordNode.file_id_path().
 
 The new tests need pyfakefs, so python3-pyfakefs <!nocheck> is added to
 Build-Depends. Trixie has 5.8.0-1 and the tests pass with it.

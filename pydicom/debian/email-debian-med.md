@@ -1,4 +1,4 @@
-<!-- DRAFT - NOT SENT. Read the debdiff and the test results before sending.
+<!-- SENT on 2026-11-10 17:21 UTC from valentintorassacolombero@gmail.com (body below the "---" line).
      To:      debian-med@lists.debian.org
      Cc:      Andreas Tille <tille@debian.org>, Emmanuel Arias <eamanu@debian.org>
      Subject: pydicom: CVE-2026-32711 for trixie (2.4.3-2+deb13u1)
