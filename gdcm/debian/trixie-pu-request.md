@@ -1,13 +1,9 @@
-<!-- DRAFT - DO NOT SEND YET. Target: Debian 13.9 (January 2027). The debian-med mail went out on 2026-11-02.
-     Send only after debian-med replies to email-debian-med.md and the salsa MR
-     is accepted (or the team asks us to file it ourselves), and preferably once
-     the regression fix (upstream 9ced0f9, Debian bug #1152837) is in unstable:
-     the release team usually wants every pu change already fixed in unstable.
-     File it with `reportbug release.debian.org` (type "pu", suite trixie) or by
-     mail to submit@bugs.debian.org with these pseudo-headers, attaching
-     gdcm_3.0.24-5+deb13u1_trixie.debdiff from this folder.
-     The "I reviewed all changes and I approve them" box is left unticked on
-     purpose: tick it after reading the debdiff.
+<!-- FILED on 2026-11-05 as Debian bug #1153126 (https://bugs.debian.org/1153126),
+     from valentintorassacolombero@gmail.com, with
+     gdcm_3.0.24-5+deb13u1_trixie.debdiff from this folder attached.
+     Andreas Tille and Emmanuel Arias agreed to the update on debian-med on
+     2026-11-03. Target: Debian 13.9 (January 2027).
+     The text below is the report as sent.
      If the sponsor uploads with a different debian/changelog date, regenerate
      the debdiff. -->
 
@@ -91,7 +87,7 @@ unstable. The bullseye LTS update DLA-4652-1 shipped the same CVE fixes.
 
 [ Checklist ]
   [x] *all* changes are documented in the d/changelog
-  [ ] I reviewed all changes and I approve them
+  [x] I reviewed all changes and I approve them
   [x] attach debdiff against the package in (old)stable
   [x] the issue is verified as fixed in unstable
 
@@ -124,3 +120,8 @@ Unstable (3.0.24-14) does not have upstream 9ced0f9 yet. The same patch
 is proposed there in #1152837
 (https://bugs.debian.org/1152837). I am not a Debian member, so the upload
 will need a sponsor from the Debian Med team.
+
+Emmanuel Arias and Andreas Tille agreed on debian-med to this update
+going in this way. The changes are on a branch against debian/trixie
+(med-team/gdcm on salsa); I will open the merge request as soon as my
+salsa account is approved and add the link here.

@@ -18,13 +18,13 @@ software where a CVE is public, an upstream fix exists, but nothing has landed i
 channel most people actually run.
 
 Each fix here is **DEP-3 formatted** and ready to drop into `debian/patches/`, with the
-provenance (upstream commit, CVE, bug links) baked into the patch header. Today the
-focus is **Ubuntu `universe`** CVEs, but the layout is distro-agnostic - anything with a
-public CVE and an upstream fix is fair game.
+provenance (upstream commit, CVE, bug links) baked into the patch header. The focus is
+**Ubuntu `universe`** CVEs and, since November 2026, **Debian stable** updates. The
+layout is distro-agnostic - anything with a public CVE and an upstream fix is fair game.
 
 | | |
 |---|---|
-| **Scope** | Open-source security patches (currently Ubuntu universe) |
+| **Scope** | Open-source security patches (Ubuntu universe and Debian stable) |
 | **Format** | DEP-3 patches, ready for `debian/patches/` |
 | **Status** | Tracked in [`fixes.yaml`](fixes.yaml) |
 | **Contributing** | See [`CONTRIBUTING.md`](CONTRIBUTING.md) |
@@ -113,6 +113,39 @@ formatted so a maintainer can pick them up with zero rework.
 
 ---
 
+## Debian stable updates
+
+Since November 2026 the same method is applied to Debian itself, for packages of the
+[Debian Med](https://www.debian.org/devel/debian-med/) team that read medical image files
+and still have open CVEs in the stable release. These updates go through the package
+maintainers and a stable point release (`trixie-pu`), not through an SRU, so they are not
+part of `fixes.yaml` or `tools/submit-sru.sh`.
+
+State on 2026-11-10. **None of these is in the Debian archive yet.**
+
+| Package | Target | Issue | Where | State |
+|---|---|---|---|---|
+| `gdcm` | unstable | Regression of the CVE-2025-53618 / CVE-2025-53619 patch | [#1152837](https://bugs.debian.org/1152837) | Reported with a patch; open |
+| `gdcm` | trixie (13) | CVE-2025-11266, CVE-2025-48429, CVE-2025-52582, CVE-2025-53618, CVE-2025-53619, CVE-2026-3650 | [#1153126](https://bugs.debian.org/1153126) | `trixie-pu` request filed with the [debdiff](gdcm/debian/gdcm_3.0.24-5+deb13u1_trixie.debdiff); agreed with the team, waiting for the release team |
+| `gdcm` | bookworm (12, LTS) | The same six CVEs | debian-med list | [Debdiff](gdcm/debian/gdcm_3.0.21-1+deb12u1_bookworm.debdiff) sent on 2026-11-05; a Debian developer is reviewing it |
+| `invesalius` | unstable, then trixie (13) | CVE-2024-44825, plus CVE-2024-42845 in trixie | [#1136204](https://bugs.debian.org/1136204) | [Patch](invesalius/CVE-2024-44825.patch) and [trixie debdiff](invesalius/debian/invesalius_3.1.99998-7+deb13u1_trixie.debdiff) built and tested; not submitted yet |
+| `pydicom` | trixie (13) | CVE-2026-32711 | [#1131492](https://bugs.debian.org/1131492) | [Patch](pydicom/CVE-2026-32711.patch) and [debdiff](pydicom/debian/pydicom_2.4.3-2+deb13u1_trixie.debdiff) built and tested; not submitted yet |
+
+Each of these package folders has a `debian/` subfolder with the debdiff and the text of
+what was sent or is going to be sent: the mail to the team, the bug report or reply, and
+the `trixie-pu` request. A draft says so in its first line.
+
+How an update is prepared:
+
+1. Take the CVEs that the [Debian security tracker](https://security-tracker.debian.org/tracker/)
+   lists as open in stable and that are fixed in unstable or upstream.
+2. Backport the patch with a DEP-3 header.
+3. Build in a clean container of the target release.
+4. Compare the old and the new package, on crafted input and on ordinary files.
+5. Agree the change with the maintainers before asking the release team.
+
+---
+
 ## Status review - 2026-09-29
 
 Read from the live trackers on 2026-09-29. **No fix has landed in a standard Ubuntu pocket
@@ -197,11 +230,14 @@ tools/
   submit-sru.sh        → build source-only SRU uploads for every fix (Ubuntu only)
 libsoup3/              → CVE-2025-11021 / CVE-2025-4945
 libyaml-syck-perl/     → CVE-2025-11683
-gdcm/                  → CVE-2025-11266
+gdcm/                  → CVE-2025-11266; debian/ has the trixie and bookworm updates
+invesalius/            → CVE-2024-44825 (Debian only)
+pydicom/               → CVE-2026-32711 (Debian only)
 ```
 
 Each package folder contains the `.patch` file, a ready-to-file `bug-report.md`, and any
-packaging diffs (`changelog.diff`, `*.debdiff`).
+packaging diffs (`changelog.diff`, `*.debdiff`). The Debian-only folders have no
+`bug-report.md`; their texts are in `debian/`.
 
 ### Add a fix
 
